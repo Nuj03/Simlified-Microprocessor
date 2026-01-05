@@ -75,19 +75,12 @@ architecture Behavioral of cpu_core is
     signal memory_data_out : std_logic_vector(DATA_WIDTH-1 downto 0);
     
 
-    type state_types is (
-        S_RESET, 
-        S_FETCH_0, 
-        S_FETCH_1, 
-        S_FETCH_2, 
-        S_DECODE, 
-        S_HALT
-    );
+    
     signal current_state, next_state : state_types;
 
 begin
     u_regfile : regfile
-            port map(
+        port map(
                 clk => clk,
                 write_enable => reg_write_en,
                 write_address => regW_addr,
@@ -96,7 +89,7 @@ begin
                 readB_address => regB_addr,
                 readA_data => regA,
                 readB_data => regB
-            );
+        );
 
     u_alu : alu
         port map(
@@ -141,6 +134,12 @@ begin
                 when S_FETCH_2 =>
                     IR <= DR;
                     PC <= std_logic_vector(unsigned(PC) + 1);
+                when S_EXECUTE_LOAD_0 =>
+                    AR <= IR(2 downto 0);
+                when S_EXECUTE_STORE_0 =>
+                    AR <= IR(2 downto 0);
+                
+                
                 when others => null;
             end case;
         end if;
@@ -163,8 +162,51 @@ begin
                 next_state <= S_FETCH_2;
             when S_FETCH_2 =>
                 next_state <= S_DECODE;
+
             when S_DECODE =>
-                null;
+                if IR(7 downto 5) = OP_LOAD then
+                    next_state <= S_EXECUTE_LOAD_0;
+                elsif IR(7 downto 5) = OP_STORE then
+                    next_state <= S_EXECUTE_STORE_0;
+                elsif IR(7 downto 5) = OP_ADD then
+                    next_state <= S_EXECUTE_ALU_0;
+                elsif IR(7 downto 5) = OP_HALT then
+                    next_state <= S_HALT;
+                else
+                    next_state <= S_FETCH_0;
+                end if;
+
+            when S_EXECUTE_LOAD_0 =>
+                memory_read_en <= '1';
+                next_state <= S_EXECUTE_LOAD_1;
+            when S_EXECUTE_LOAD_1 =>
+                DR <= memory_data_out;
+                memory_read_en <= '1';
+                next_state <= S_EXECUTE_LOAD_2;
+            when S_EXECUTE_LOAD_2 =>
+                reg_write_en <= '1';
+                reg_source_select <= '1'; 
+                regW_addr <= IR(4 downto 3);
+                next_state <= S_FETCH_0;
+
+            when S_EXECUTE_STORE_0 => 
+                next_state <= S_EXECUTE_STORE_1;
+            when S_EXECUTE_STORE_1 =>
+                memory_write_en <= '1';
+                next_state <= S_FETCH_0;
+
+            when S_EXECUTE_ALU_0 =>
+                alu_op <= ALU_OP_ADD;
+                reg_write_en <= '1';
+                reg_source_select <= '0';
+                regW_addr <= IR(4 downto 3);
+                next_state <= S_FETCH_0;
+
+            when S_HALT =>
+                next_state <= S_HALT;
+
+            when others => null;
+        end case;
         
     end process;
 
