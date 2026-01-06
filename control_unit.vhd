@@ -1,6 +1,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use work.cpu_types_pkg.all;
 
 
 entity control_unit is
@@ -21,9 +22,10 @@ architecture Behavioral of control_unit is
     signal current_state_sig : state_types := S_RESET;
     signal microinstr : microinstr_t;
 begin
-    u_microcode_rom : microcode_rom;
+    u_microcode_rom : entity work.microcode_rom
         port map(
             current_state => current_state_sig,
+            IR => IR,
             microinstr_out => microinstr
         );
 
@@ -35,7 +37,7 @@ begin
             current_state_sig <= microinstr.next_state;
         end if;
     end process;
-    
+
     mem_read_en  <= microinstr.mem_read_en;
     mem_write_en <= microinstr.mem_write_en;
     alu_op       <= microinstr.alu_op;

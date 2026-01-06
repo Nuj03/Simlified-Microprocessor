@@ -16,7 +16,7 @@ entity memory is
 end entity memory;
 
 architecture Behavioral of memory is
-
+    --memory array declaration
     type memory_array_t is array (0 to MEM_DEPTH-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
     signal mem : memory_array_t := (others => (others => '0'));
     
@@ -25,12 +25,14 @@ begin
     process(clk)
         begin
             if rising_edge(clk) then
+            --write operation
                 if write_en = '1' then
                     mem(to_integer(unsigned(addr))) <= data_in;
                 end if;
             end if;
     end process;
     
+    --read operation
     data_out <= mem(to_integer(unsigned(addr))) when read_en = '1'
         else (others => '0');
     

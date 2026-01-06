@@ -18,17 +18,22 @@ entity regfile is
 end entity regfile;
 
 architecture Behavioral of regfile is
+    --register array declaration
     type reg_array_t is array (0 to REG_COUNT-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
     signal registers : reg_array_t := (others => (others => '0'));
 begin
     process(clk)
     begin
         if rising_edge(clk) then
+        
+            --write operation
             if write_enable = '1' then
                 registers( to_integer( unsigned(write_address) ) ) <= write_data;
             end if;
         end if;
     end process;
+
+    --read operations
     readA_data <= registers( to_integer( unsigned(readA_address) ) );
     readB_data <= registers( to_integer( unsigned(readB_address) ) );
 

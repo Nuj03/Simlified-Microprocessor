@@ -11,40 +11,6 @@ end entity cpu_core;
 
 architecture Behavioral of cpu_core is
 
-
-    component regfile is
-        port (
-            clk           : in  std_logic;
-            write_enable  : in  std_logic;
-            write_address : in  std_logic_vector(REG_INDEX_W-1 downto 0);
-            write_data    : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-            readA_address : in  std_logic_vector(REG_INDEX_W-1 downto 0);
-            readB_address : in  std_logic_vector(REG_INDEX_W-1 downto 0);
-            readA_data    : out std_logic_vector(DATA_WIDTH-1 downto 0);
-            readB_data    : out std_logic_vector(DATA_WIDTH-1 downto 0)
-        );
-    end component;
-
-    component alu is
-        port (
-            A      : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-            B      : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-            ALU_op : in  alu_op_t;
-            Result : out std_logic_vector(DATA_WIDTH-1 downto 0)
-        );
-    end component;
-
-    component memory is
-        port (
-            clk      : in  std_logic;
-            addr     : in  std_logic_vector(MEM_ADDR_W-1 downto 0);
-            data_in  : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-            write_en : in  std_logic;
-            read_en  : in  std_logic;
-            data_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
-        );
-    end component;
-
     --internal CPU signals
     signal PC : std_logic_vector(MEM_ADDR_W-1 downto 0);
     signal IR : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -79,7 +45,9 @@ architecture Behavioral of cpu_core is
     signal current_state, next_state : state_types;
 
 begin
-    u_regfile : regfile
+
+    --THE CPU REGISTERS
+    u_regfile : entity work.regfile
         port map(
                 clk => clk,
                 write_enable => reg_write_en,
@@ -91,7 +59,8 @@ begin
                 readB_data => regB
         );
 
-    u_alu : alu
+    --THE ARITHMETIC LOGIC UNIT
+    u_alu : entity work.alu
         port map(
             A => regA,
             B => regB,
@@ -99,7 +68,8 @@ begin
             Result => alu_result
         );
     
-    u_memory : memory
+    --THE MEMORY UNIT
+    u_memory : entity work.memory
         port map(
             clk => clk,
             addr => AR,
@@ -107,6 +77,20 @@ begin
             write_en => memory_write_en,
             read_en => memory_read_en,
             data_out => memory_data_out
+        );
+
+    --THE CONTROL UNIT
+    u_control_unit : entity work.control_unit
+        port map(
+            clk => clk,
+            rst => rst,
+            IR => IR,
+            mem_read_en => memory_read_en,
+            mem_write_en => memory_write_en,
+            alu_op => alu_op,
+            reg_write_en => reg_write_en,
+            reg_src_sel => reg_source_select,
+            next_state => next_state
         );
     
     FSM_reg_proc : process(clk, rst)
@@ -118,15 +102,20 @@ begin
         end if;
     end process;    
 
-    pc_ar_ir_proc : process(clk, rst)
+    register_update_proc : process(clk, rst)
     begin
         if rst = '1' then
             PC <= (others => '0');
             AR <= (others => '0');
             IR <= (others => '0');
             DR <= (others => '0');
+            regA_addr <= (others => '0');
+            regB_addr <= (others => '0');
+            regW_addr <= (others => '0');
         elsif rising_edge(clk) then
             case current_state is
+            
+                -- Fetch Cycle
                 when S_FETCH_0 => 
                     AR <= PC;
                 when S_FETCH_1 =>
@@ -134,83 +123,28 @@ begin
                 when S_FETCH_2 =>
                     IR <= DR;
                     PC <= std_logic_vector(unsigned(PC) + 1);
+
+                -- Execute Load Cycle
                 when S_EXECUTE_LOAD_0 =>
                     AR <= IR(2 downto 0);
+                when S_EXECUTE_LOAD_2 =>
+                    regW_addr <= IR(4 downto 3);
+
+                -- Execute Store Cycle    
                 when S_EXECUTE_STORE_0 =>
                     AR <= IR(2 downto 0);
-                
+
+                -- Execute ALU Operation Cycle
+                when S_EXECUTE_ALU_0 =>
+                    regA_addr <= IR(4 downto 3);
+                    regB_addr <= IR(2 downto 1);
+                    regW_addr <= IR(4 downto 3); -- Destination register
                 
                 when others => null;
             end case;
         end if;
     end process;
     
-    control_fsm_proc : process(current_state)
-    begin
-        memory_read_en <= '0';
-        memory_write_en <= '0';
-        next_state <= current_state;
-        
-        case state is
-            when S_RESET =>
-                next_state <= S_FETCH_0;
-            when S_FETCH_0 =>
-                memory_read_en <= '1';
-                next_state <= S_FETCH_1;
-            when S_FETCH_1 =>
-                memory_read_en <= '1';
-                next_state <= S_FETCH_2;
-            when S_FETCH_2 =>
-                next_state <= S_DECODE;
-
-            when S_DECODE =>
-                if IR(7 downto 5) = OP_LOAD then
-                    next_state <= S_EXECUTE_LOAD_0;
-                elsif IR(7 downto 5) = OP_STORE then
-                    next_state <= S_EXECUTE_STORE_0;
-                elsif IR(7 downto 5) = OP_ADD then
-                    next_state <= S_EXECUTE_ALU_0;
-                elsif IR(7 downto 5) = OP_HALT then
-                    next_state <= S_HALT;
-                else
-                    next_state <= S_FETCH_0;
-                end if;
-
-            when S_EXECUTE_LOAD_0 =>
-                memory_read_en <= '1';
-                next_state <= S_EXECUTE_LOAD_1;
-            when S_EXECUTE_LOAD_1 =>
-                DR <= memory_data_out;
-                memory_read_en <= '1';
-                next_state <= S_EXECUTE_LOAD_2;
-            when S_EXECUTE_LOAD_2 =>
-                reg_write_en <= '1';
-                reg_source_select <= '1'; 
-                regW_addr <= IR(4 downto 3);
-                next_state <= S_FETCH_0;
-
-            when S_EXECUTE_STORE_0 => 
-                next_state <= S_EXECUTE_STORE_1;
-            when S_EXECUTE_STORE_1 =>
-                memory_write_en <= '1';
-                next_state <= S_FETCH_0;
-
-            when S_EXECUTE_ALU_0 =>
-                alu_op <= ALU_OP_ADD;
-                reg_write_en <= '1';
-                reg_source_select <= '0';
-                regW_addr <= IR(4 downto 3);
-                next_state <= S_FETCH_0;
-
-            when S_HALT =>
-                next_state <= S_HALT;
-
-            when others => null;
-        end case;
-        
-    end process;
-
-
     reg_write_data <= alu_result when reg_source_select = '0'
         else DR;
 

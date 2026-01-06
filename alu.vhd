@@ -18,8 +18,10 @@ architecture Behavioral of alu is
         process(A, B, ALU_op)
         begin
             case ALU_op is
+                -- Addition operation
                 when ALU_ADD =>
                     Result <= std_logic_vector( unsigned(A) + unsigned(B) );
+                -- Pass A operation
                 when ALU_PASS_A =>
                     Result <= A;
             end case;
