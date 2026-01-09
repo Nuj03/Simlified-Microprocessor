@@ -43,5 +43,5 @@ begin
     alu_op       <= microinstr.alu_op;
     reg_write_en <= microinstr.reg_write_en;
     reg_src_sel  <= microinstr.reg_src_sel;
-    next_state   <= current_state_sig;
+    next_state   <= microinstr.next_state;
 end Behavioral;

@@ -39,7 +39,7 @@ architecture Behavioral of cpu_core is
     signal memory_read_en : std_logic;
     signal memory_write_en : std_logic;
     signal memory_data_out : std_logic_vector(DATA_WIDTH-1 downto 0);
-    
+
 
     
     signal current_state, next_state : state_types;
@@ -127,8 +127,11 @@ begin
                 -- Execute Load Cycle
                 when S_EXECUTE_LOAD_0 =>
                     AR <= IR(2 downto 0);
-                when S_EXECUTE_LOAD_2 =>
                     regW_addr <= IR(4 downto 3);
+                when S_EXECUTE_LOAD_1 =>
+                    DR <= memory_data_out;
+                when S_EXECUTE_LOAD_2 =>
+                    null;
 
                 -- Execute Store Cycle    
                 when S_EXECUTE_STORE_0 =>
@@ -138,13 +141,16 @@ begin
                 when S_EXECUTE_ALU_0 =>
                     regA_addr <= IR(4 downto 3);
                     regB_addr <= IR(2 downto 1);
-                    regW_addr <= IR(4 downto 3); -- Destination register
+                    regW_addr <= IR(4 downto 3);
                 
+                when S_EXECUTE_ALU_1 =>
+                    null;
+
                 when others => null;
             end case;
         end if;
     end process;
-    
+
     reg_write_data <= alu_result when reg_source_select = '0'
         else DR;
 

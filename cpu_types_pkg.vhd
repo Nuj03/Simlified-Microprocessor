@@ -23,7 +23,7 @@ type state_types is (
         S_DECODE, 
         S_EXECUTE_LOAD_0, S_EXECUTE_LOAD_1, S_EXECUTE_LOAD_2,
         S_EXECUTE_STORE_0, S_EXECUTE_STORE_1,
-        S_EXECUTE_ALU_0,
+        S_EXECUTE_ALU_0, S_EXECUTE_ALU_1,
         S_HALT
     );
 

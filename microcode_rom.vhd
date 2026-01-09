@@ -77,6 +77,9 @@ begin
 
             -- instruction execute ALU states
             when S_EXECUTE_ALU_0 =>
+                microinstr.next_state := S_EXECUTE_ALU_1;
+
+            when S_EXECUTE_ALU_1 =>
                 microinstr.alu_op := ALU_ADD;
                 microinstr.reg_write_en := '1';
                 microinstr.reg_src_sel := '0';
