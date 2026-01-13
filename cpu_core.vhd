@@ -25,10 +25,10 @@ architecture Behavioral of cpu_core is
     --register file data signals
     signal regA : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal regB : std_logic_vector(DATA_WIDTH-1 downto 0);
-    
-    --control signals
-    signal reg_write_en : std_logic;
     signal reg_write_data : std_logic_vector(DATA_WIDTH-1 downto 0);
+
+    --register control signals
+    signal reg_write_en : std_logic;
     signal reg_source_select : std_logic; -- '0' for ALU, '1' for DR
     
     --ALU signals
@@ -40,8 +40,7 @@ architecture Behavioral of cpu_core is
     signal memory_write_en : std_logic;
     signal memory_data_out : std_logic_vector(DATA_WIDTH-1 downto 0);
 
-
-    
+    --control unit signals
     signal current_state, next_state : state_types;
 
 begin
@@ -136,6 +135,8 @@ begin
                 -- Execute Store Cycle    
                 when S_EXECUTE_STORE_0 =>
                     AR <= IR(2 downto 0);
+                    regB_addr <= IR(4 downto 3);
+                    null;
 
                 -- Execute ALU Operation Cycle
                 when S_EXECUTE_ALU_0 =>
