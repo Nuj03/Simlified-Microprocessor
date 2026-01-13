@@ -70,6 +70,7 @@ begin
 
             -- instruction execute store states
             when S_EXECUTE_STORE_0 =>
+                microinstr.reg_src_sel := '1';
                 microinstr.next_state := S_EXECUTE_STORE_1;
             when S_EXECUTE_STORE_1 =>
                 microinstr.mem_write_en := '1';

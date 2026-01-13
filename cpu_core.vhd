@@ -72,7 +72,7 @@ begin
         port map(
             clk => clk,
             addr => AR,
-            data_in => regB,
+            data_in => regA,
             write_en => memory_write_en,
             read_en => memory_read_en,
             data_out => memory_data_out
@@ -135,7 +135,7 @@ begin
                 -- Execute Store Cycle    
                 when S_EXECUTE_STORE_0 =>
                     AR <= IR(2 downto 0);
-                    regB_addr <= IR(4 downto 3);
+                    regA_addr <= IR(4 downto 3);
                     null;
 
                 -- Execute ALU Operation Cycle

@@ -20,9 +20,9 @@ architecture Behavioral of memory is
     type memory_array_t is array (0 to MEM_DEPTH-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
     signal mem : memory_array_t := (
         0 => "00000101", -- LOAD R0, [5]
-        1 => "00001110", -- LOAD R1, [6]
-        2 => "01000010", -- ADD R0 = R0 + R1  (RegA=R0, RegB=R1)
-        3 => "00101111", -- STORE R1, [7]
+        1 => "00010110", -- LOAD R2, [6]
+        2 => "01000000", -- ADD : R0 = R0+R0
+        3 => "00110111", -- STORE R2, [7]
         4 => "11100000", -- HALT
         5 => "00011111", -- Data: 31
         6 => "00001010", -- Data: 10
