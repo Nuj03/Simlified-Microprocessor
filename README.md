@@ -93,6 +93,30 @@ Top-level CPU integrating:
 
 ---
 
+## Example Program (Current Memory Contents)
+
+The microprocessor currently contains the following program in memory:
+
+| Address | Instruction | Operation |
+|---------|------------|-----------|
+| 0 | `LOAD R0, [5]` | Load R0 with value from memory address 5 (value: 31) |
+| 1 | `LOAD R2, [6]` | Load R2 with value from memory address 6 (value: 10) |
+| 2 | `ADD R0, R0` | Add R0 = R0 + R0 (result: 62 stored in R0) |
+| 3 | `STORE R2, [7]` | Store R2 to memory address 7 |
+| 4 | `HALT` | Halt execution |
+| 5 | `00011111` | Data: 31 (decimal) |
+| 6 | `00001010` | Data: 10 (decimal) |
+| 7 | (empty) | Memory location for storing result |
+
+**Program Execution:**
+1. Load the constant value 31 from memory into R0
+2. Load the constant value 10 from memory into R2
+3. Add R0 to itself: R0 = 31 + 31 = 62
+4. Store the value from R2 (10) to memory address 7
+5. Stop execution
+
+---
+
 ## Instruction Behaviour
 
 | Instruction | Behaviour |

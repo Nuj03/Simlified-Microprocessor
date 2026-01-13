@@ -27,10 +27,16 @@
     │   MEMORY     │        │    REGISTER FILE │
     ├──────────────┤        ├──────────────────┤
     │ 8 words x 8  │        │ 4 regs x 8 bits  │
-    │ Instructions │        │ (R0-R3)          │
-    │ & Data       │        │                  │
-    │              │        │ regA, regB       │
-    │              │        │ (read outputs)   │
+    │ Addr │ Data │        │ (R0-R3)          │
+    │──────┼──────│        │                  │
+    │  0   │ LOAD │        │ After Execution: │
+    │  1   │ LOAD │        │ R0 = 62 (0x3E)   │
+    │  2   │ ADD  │        │ R2 = 10 (0x0A)   │
+    │  3   │STORE │        │                  │
+    │  4   │ HALT │        │ regA, regB       │
+    │  5   │ 0x1F │        │ (read outputs)   │
+    │  6   │ 0x0A │        │                  │
+    │  7   │  --  │        │                  │
     └──────────────┘        └──────────────────┘
           ▲                        ▲
           │ data_out               │ readA_data
@@ -43,7 +49,8 @@
             │      ALU      │
             ├───────────────┤
             │ ADD operation │
-            │ (regA + regB) │
+            │ (regA + regA) │
+            │ 31 + 31 = 62  │
             └───────────────┘
                     │
                     ▼
